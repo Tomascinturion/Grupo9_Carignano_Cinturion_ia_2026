@@ -1,0 +1,34 @@
+from simpleai.search import (
+    SearchProblem,
+    breadth_first,
+    depth_first,
+    limited_depth_first,
+    uniform_cost,
+    iterative_limited_depth_first,
+    greedy,
+    astar,
+)
+from simpleai.search.viewers import BaseViewer, WebViewer
+
+def planear_rover(
+    rover_inicio,
+    bateria_inicial,
+    zonas_sombra,
+    muestras_igneas,
+    muestras_sedimentarias,
+):
+    # TODO: Implementar la función para planear las acciones del rover.
+
+    # El resultado deberá ser una lista de las acciones a realizar.
+    # Cada acción debe ser una tupla con el siguiente formato: (str_tipo_accion, parametro_opcional).
+    return []
+
+
+# todas las coordenadas son en formato (fila, columna)
+acciones = planear_rover(
+    rover_inicio=(0, 0),
+    bateria_inicial=20,
+    zonas_sombra=[(0, 1), (0, 2)],
+    muestras_igneas=[(1, 1), (1, 2)],
+    muestras_sedimentarias=[(2, 3)],
+)
