@@ -10,6 +10,28 @@ from simpleai.search import (
 )
 from simpleai.search.viewers import BaseViewer, WebViewer
 
+class RoverProblem(SearchProblem):
+    
+    #TODO: Implementar cost
+    def cost(self, state, action, state2):
+        pass
+
+    #TODO: Implementar actions
+    def actions(self, state):
+        pass
+    
+    #TODO: Implementar result
+    def result(self, state, action):
+        pass
+   
+    #TODO: Implementar is_goal
+    def is_goal(self, state):
+        pass
+    
+    #TODO: Implementar heuristic
+    def heuristic(self, state):
+        pass
+
 def planear_rover(
     rover_inicio,
     bateria_inicial,
@@ -17,14 +39,24 @@ def planear_rover(
     muestras_igneas,
     muestras_sedimentarias,
 ):
-    # TODO: Implementar la función para planear las acciones del rover.
+    estado_inicial = (
+        rover_inicio,
+        bateria_inicial,
+        zonas_sombra,
+        muestras_igneas,
+        muestras_sedimentarias,
+    )
 
-    # El resultado deberá ser una lista de las acciones a realizar.
-    # Cada acción debe ser una tupla con el siguiente formato: (str_tipo_accion, parametro_opcional).
-    return []
+    problema = RoverProblem(estado_inicial)
+
+    resultado = astar(problema)
+
+    acciones = [accion for accion, estado in resultado.path()]
+
+    return acciones
 
 
-# todas las coordenadas son en formato (fila, columna)
+# Formato coordenadas: (fila, columna)
 acciones = planear_rover(
     rover_inicio=(0, 0),
     bateria_inicial=20,
@@ -32,3 +64,7 @@ acciones = planear_rover(
     muestras_igneas=[(1, 1), (1, 2)],
     muestras_sedimentarias=[(2, 3)],
 )
+
+print(acciones)
+
+#TODO: uv pip install --> pydot flask
