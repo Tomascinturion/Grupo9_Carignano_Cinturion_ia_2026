@@ -19,10 +19,8 @@ class RoverProblem(SearchProblem):
     def actions(self, state):
         
         lista_acciones = []
-        
         #estado_actual = list(state) VERIFICAR SI ANDA - SI SI BORRAR - SI NO USAR estado_actual en linea de abajo
         posicion_rover, bateria, zonas_sombra, muestras_igneas, muestras_sedimentarias, taladro_equipado, muestras_almacenadas = state
-        
         muestras_restantes = len(muestras_igneas) + len(muestras_sedimentarias)
 
         if (bateria > 0 and bateria < 20):
@@ -36,10 +34,13 @@ class RoverProblem(SearchProblem):
 
         if (bateria > 1):
             #Moverse
-            lista_acciones.append(("moverse", (posicion_rover[0] + 1, posicion_rover[1])))
-            lista_acciones.append(("moverse", (posicion_rover[0] - 1, posicion_rover[1])))
-            lista_acciones.append(("moverse", (posicion_rover[0], posicion_rover[1] + 1)))
-            lista_acciones.append(("moverse", (posicion_rover[0], posicion_rover[1] - 1)))
+            rover_x, rover_y = posicion_rover
+            posibles_movimientos = [(1,0), (-1,0), (0,1), (0,-1)]
+            
+            # Aprendi a desmepaquetar! Se puede hacer directo en el for, WOW!
+            for mov_x, mov_y in posibles_movimientos:
+            	nueva_posicion = (rover_x + mov_x, rover_y + mov_y)
+            	lista_acciones.append(("moverse", nueva_posicion))
 
             #Equipar taladro
             if (taladro_equipado == "termico"):
@@ -68,10 +69,10 @@ class RoverProblem(SearchProblem):
         
         if (bateria > 4):
             #Sobremarcha (overdrive)
-            lista_acciones.append(("sobremarcha", (posicion_rover[0] + 2, posicion_rover[1])))
-            lista_acciones.append(("sobremarcha", (posicion_rover[0] - 2, posicion_rover[1])))
-            lista_acciones.append(("sobremarcha", (posicion_rover[0], posicion_rover[1] + 2)))
-            lista_acciones.append(("sobremarcha", (posicion_rover[0], posicion_rover[1] - 2)))
+            posibles_overdrive = [(2,0), (-2,0), (0,2), (0,-2)]
+            for mov_x, mov_y in posibles_overdrive:
+            	nueva_posicion = (rover_x + mov_x, rover_y + mov_y)
+            	lista_acciones.append(("sobremarcha", nueva_posicion))
         
         return tuple(lista_acciones)
 
