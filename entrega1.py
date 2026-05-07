@@ -25,11 +25,7 @@ class RoverProblem(SearchProblem):
 
         if (bateria > 0 and bateria < 20):
             #Desplegar paneles solares
-            habilitado = 0
-            for zona in zonas_sombra:
-                if(zona == posicion_rover):
-                    habilitado += 1
-            if(habilitado == 0):
+            if posicion_rover not in zonas_sombra:
                 lista_acciones.append(("recargar", None))
 
         if (bateria > 1):
