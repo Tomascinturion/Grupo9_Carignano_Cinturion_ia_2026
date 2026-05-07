@@ -103,6 +103,8 @@ def planear_rover(
 
     problema = RoverProblem(estado_inicial)
 
+    viewer = WebViewer() # BaseViewer() para consola. IMPORTANTE: DESACTIVAR AL ENTREGAR
+
     resultado = astar(problema)
 
     acciones = [accion for accion, estado in resultado.path()]
