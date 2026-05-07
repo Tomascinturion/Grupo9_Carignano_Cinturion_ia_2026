@@ -19,57 +19,59 @@ class RoverProblem(SearchProblem):
     def actions(self, state):
         
         lista_acciones = []
-        estado_actual = list(state)
-        muestras_restantes = len(estado_actual[3]) + len(estado_actual[4])
-        posicion_actual = estado_actual[0]
+        
+        #estado_actual = list(state) VERIFICAR SI ANDA - SI SI BORRAR - SI NO USAR estado_actual en linea de abajo
+        posicion_rover, bateria, zonas_sombra, muestras_igneas, muestras_sedimentarias, taladro_equipado, muestras_almacenadas = state
+        
+        muestras_restantes = len(muestras_igneas) + len(muestras_sedimentarias)
 
-        if (estado_actual[1] > 0 and estado_actual[1] < 20):
+        if (bateria > 0 and bateria < 20):
             #Desplegar paneles solares
             habilitado = 0
-            for zonas_sombra in estado_actual[2]:
-                if(zonas_sombra == posicion_actual):
+            for zona in zonas_sombra:
+                if(zona == posicion_rover):
                     habilitado += 1
             if(habilitado == 0):
                 lista_acciones.append(("recargar", None))
 
-        if (estado_actual[1] > 1):
+        if (bateria > 1):
             #Moverse
-            lista_acciones.append(("moverse", (posicion_actual[0] + 1, posicion_actual[1])))
-            lista_acciones.append(("moverse", (posicion_actual[0] - 1, posicion_actual[1])))
-            lista_acciones.append(("moverse", (posicion_actual[0], posicion_actual[1] + 1)))
-            lista_acciones.append(("moverse", (posicion_actual[0], posicion_actual[1] - 1)))
+            lista_acciones.append(("moverse", (posicion_rover[0] + 1, posicion_rover[1])))
+            lista_acciones.append(("moverse", (posicion_rover[0] - 1, posicion_rover[1])))
+            lista_acciones.append(("moverse", (posicion_rover[0], posicion_rover[1] + 1)))
+            lista_acciones.append(("moverse", (posicion_rover[0], posicion_rover[1] - 1)))
 
             #Equipar taladro
-            if (estado_actual[5] == "termico"):
+            if (taladro_equipado == "termico"):
                 lista_acciones.append(("equipar", "percusion"))
-            elif (estado_actual[5] == "percusion"):
+            elif (taladro_equipado == "percusion"):
                 lista_acciones.append(("equipar", "termico"))
             else:
                 lista_acciones.append(("equipar", "termico"))
                 lista_acciones.append(("equipar", "percusion"))
 
             #Depositar cápsula con muestras
-            if(estado_actual[6] == 2 or (muestras_restantes == 0 and estado_actual[6] == 1)):
+            if(muestras_almacenadas == 2 or (muestras_restantes == 0 and muestras_almacenadas == 1)):
                 lista_acciones.append(("depositar", None))
         
-        if (estado_actual[1] > 3):
+        if (bateria > 3):
             #Perforar y recolectar
-            if (estado_actual[6] < 2 and muestras_restantes > 0):
-                if (estado_actual[5] == "termico"):
-                    for posicion_muestra in estado_actual[3]:
-                        if(posicion_muestra == posicion_actual):
+            if (muestras_almacenadas < 2 and muestras_restantes > 0):
+                if (taladro_equipado == "termico"):
+                    for muestra in muestras_igneas:
+                        if(muestra == posicion_rover):
                             lista_acciones.append(("recolectar", "ignea"))		
-                elif (estado_actual[5] == "percusion"):
-                    for posicion_muestra in estado_actual[4]:
-                        if(posicion_muestra == posicion_actual):
+                elif (taladro_equipado == "percusion"):
+                    for muestra in muestras_sedimentarias:
+                        if(muestra == posicion_rover):
                             lista_acciones.append(("recolectar", "sedimentaria"))
         
-        if (estado_actual[1] > 4):
+        if (bateria > 4):
             #Sobremarcha (overdrive)
-            lista_acciones.append(("sobremarcha", (posicion_actual[0] + 2, posicion_actual[1])))
-            lista_acciones.append(("sobremarcha", (posicion_actual[0] - 2, posicion_actual[1])))
-            lista_acciones.append(("sobremarcha", (posicion_actual[0], posicion_actual[1] + 2)))
-            lista_acciones.append(("sobremarcha", (posicion_actual[0], posicion_actual[1] - 2)))
+            lista_acciones.append(("sobremarcha", (posicion_rover[0] + 2, posicion_rover[1])))
+            lista_acciones.append(("sobremarcha", (posicion_rover[0] - 2, posicion_rover[1])))
+            lista_acciones.append(("sobremarcha", (posicion_rover[0], posicion_rover[1] + 2)))
+            lista_acciones.append(("sobremarcha", (posicion_rover[0], posicion_rover[1] - 2)))
         
         return tuple(lista_acciones)
 
@@ -99,7 +101,7 @@ def planear_rover(
         tuple(muestras_igneas),
         tuple(muestras_sedimentarias),
         None, #Taladro
-        0, #Muestras recogidas
+        0, #Muestras almacenadas
     )
 
     problema = RoverProblem(estado_inicial)
