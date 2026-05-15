@@ -38,10 +38,8 @@ class RoverProblem(SearchProblem):
         rover_x, rover_y = posicion_rover
         cantidad_muestras_restantes = len(muestras_igneas) + len(muestras_sedimentarias)
 
-        if (bateria > 0 and bateria <= 4): #Con mas bateria, se prioriza moverse, recolectar o depositar antes que recargar
-            #Desplegar paneles solares
-            if posicion_rover not in self.zonas_sombra:
-                lista_acciones.append(("recargar", None))
+        if bateria < 20 and posicion_rover not in self.zonas_sombra:
+            lista_acciones.append(("recargar", None))
 
         if (bateria > 1):
             
@@ -53,7 +51,7 @@ class RoverProblem(SearchProblem):
                 lista_acciones.append(("moverse", nueva_posicion))
 
             #Equipar taladro
-            if posicion_rover in muestras_igneas and taladro_equipado != "termico": #Solo cambiamos taladro sobre muestras
+            if posicion_rover in muestras_igneas and taladro_equipado != "termico": #Solo equipa taladro sobre muestras correctas
                 lista_acciones.append(("equipar", "termico"))
 
             if posicion_rover in muestras_sedimentarias and taladro_equipado != "percusion":
@@ -124,10 +122,10 @@ class RoverProblem(SearchProblem):
         _, bateria, muestras_igneas, muestras_sedimentarias, _, muestras_almacenadas = state
         cantidad_muestras_restantes = len(muestras_igneas) + len(muestras_sedimentarias)
 
-        return cantidad_muestras_restantes == 0 and muestras_almacenadas == 0 #and bateria > 0
+        return cantidad_muestras_restantes == 0 and muestras_almacenadas == 0
 
     def heuristic(self, state):
-        posicion, bateria, igneas, sedimentarias, taladro, almacenadas = state
+        posicion, _, igneas, sedimentarias, _, _ = state
         x, y = posicion
 
         muestras = igneas + sedimentarias
@@ -144,7 +142,7 @@ class RoverProblem(SearchProblem):
 
         # si hay solo una muestra
         if restantes == 1:
-            return movimiento_min + 3  # recolectar + depositar mínimo
+            return movimiento_min + 3  # moverse, recolectar + depositar
 
         # si hay varias muestras
         xd = [m[0] for m in muestras]
