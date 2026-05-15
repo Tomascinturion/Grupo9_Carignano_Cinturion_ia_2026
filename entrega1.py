@@ -1,20 +1,19 @@
 from simpleai.search import (
     SearchProblem,
-    breadth_first,
-    depth_first,
-    limited_depth_first,
-    uniform_cost,
-    iterative_limited_depth_first,
-    greedy,
     astar,
 )
 from simpleai.search.viewers import BaseViewer, WebViewer
 
 class RoverProblem(SearchProblem):
-    
+
+    def __init__(self, initial_state, zonas_sombra):
+        super().__init__(initial_state)
+        self.zonas_sombra = zonas_sombra
+
     def cost(self, state, action, state2):
 
         costo = 0
+        muestras_almacenadas = state[5]
         accion, _ = action
 
         if(accion == "recargar"):
@@ -24,9 +23,7 @@ class RoverProblem(SearchProblem):
         elif(accion == "equipar"):
             costo = 3
         elif(accion == "depositar"):
-            if(state[6] == 2):
-                costo += 1
-            costo += 1
+            return muestras_almacenadas
         elif(accion == "recolectar"):
             costo = 2
         elif(accion == "sobremarcha"):
@@ -37,48 +34,42 @@ class RoverProblem(SearchProblem):
     def actions(self, state):
         
         lista_acciones = []
-        posicion_rover, bateria, zonas_sombra, muestras_igneas, muestras_sedimentarias, taladro_equipado, muestras_almacenadas = state
+        posicion_rover, bateria, muestras_igneas, muestras_sedimentarias, taladro_equipado, muestras_almacenadas = state
         rover_x, rover_y = posicion_rover
         cantidad_muestras_restantes = len(muestras_igneas) + len(muestras_sedimentarias)
 
-        if (bateria > 0 and bateria < 5):
+        if (bateria > 0 and bateria <= 4): #Con mas bateria, se prioriza moverse, recolectar o depositar antes que recargar
             #Desplegar paneles solares
-            if posicion_rover not in zonas_sombra:
+            if posicion_rover not in self.zonas_sombra:
                 lista_acciones.append(("recargar", None))
 
         if (bateria > 1):
+            
             #Moverse
             posibles_movimientos = [(1,0), (-1,0), (0,1), (0,-1)]
-            
+        
             for mov_x, mov_y in posibles_movimientos:
                 nueva_posicion = (rover_x + mov_x, rover_y + mov_y)
                 lista_acciones.append(("moverse", nueva_posicion))
 
             #Equipar taladro
-            if (taladro_equipado == "termico"):
-                lista_acciones.append(("equipar", "percusion"))
-            elif (taladro_equipado == "percusion"):
+            if posicion_rover in muestras_igneas and taladro_equipado != "termico": #Solo cambiamos taladro sobre muestras
                 lista_acciones.append(("equipar", "termico"))
-            else:
-                lista_acciones.append(("equipar", "termico"))
+
+            if posicion_rover in muestras_sedimentarias and taladro_equipado != "percusion":
                 lista_acciones.append(("equipar", "percusion"))
 
             #Depositar cápsula con muestras
             if(muestras_almacenadas == 2 or (cantidad_muestras_restantes == 0 and muestras_almacenadas == 1)):
                 lista_acciones.append(("depositar", None))
         
-        if (bateria > 3):
+        if (bateria > 3 and muestras_almacenadas < 2):
             #Perforar y recolectar
-            if (muestras_almacenadas < 2 and cantidad_muestras_restantes > 0):
-                if (taladro_equipado == "termico"):
-                    for muestra in muestras_igneas:
-                        if(muestra == posicion_rover):
-                            lista_acciones.append(("recolectar", "ignea"))		
-                elif (taladro_equipado == "percusion"):
-                    for muestra in muestras_sedimentarias:
-                        if(muestra == posicion_rover):
-                            lista_acciones.append(("recolectar", "sedimentaria"))
-        
+            if (posicion_rover in muestras_igneas and taladro_equipado == "termico"):
+                lista_acciones.append(("recolectar", "ignea"))		
+            if (posicion_rover in muestras_sedimentarias and taladro_equipado == "percusion"):
+                lista_acciones.append(("recolectar", "sedimentaria"))
+
         if (bateria > 4):
             #Sobremarcha (overdrive)
             posibles_overdrive = [(2,0), (-2,0), (0,2), (0,-2)]
@@ -90,65 +81,82 @@ class RoverProblem(SearchProblem):
 
     def result(self, state, action):
 
-        nuevo_estado = list(state)
+        posicion_rover, bateria, muestras_igneas, muestras_sedimentarias, taladro_equipado, muestras_almacenadas = state
         accion, parametro = action
 
         if(accion == "recargar"):
-            nuevo_estado[1] += 10
-            if(nuevo_estado[1] > 20):
-                nuevo_estado[1] = 20
+            bateria += 10
+            if(bateria > 20):
+                bateria = 20
+        
         elif(accion == "moverse"):
-            nuevo_estado[1] -= 1
-            nuevo_estado[0] = parametro
+            bateria -= 1
+            posicion_rover = parametro
+        
         elif(accion == "equipar"):
-            nuevo_estado[1] -= 1
-            nuevo_estado[5] = parametro
+            bateria -= 1
+            taladro_equipado = parametro
+        
         elif(accion == "depositar"):
-            nuevo_estado[1] -= 1
-            nuevo_estado[6] = 0
+            bateria -= 1
+            muestras_almacenadas = 0
+        
         elif(accion == "recolectar"):
-            nuevo_estado[1] -= 3
-            nuevo_estado[6] += 1
+            bateria -= 3
+            muestras_almacenadas += 1
             if(parametro == "ignea"):
-                muestras_igneas = list(nuevo_estado[3])
-                muestras_igneas.remove(nuevo_estado[0])
-                nuevo_estado[3] = tuple(muestras_igneas)
+                muestras_igneas = list(muestras_igneas)
+                muestras_igneas.remove(posicion_rover)
+                muestras_igneas = tuple((muestras_igneas))
             else:
-                muestras_sedimentarias = list(nuevo_estado[4])
-                muestras_sedimentarias.remove(nuevo_estado[0])
-                nuevo_estado[4] = tuple(muestras_sedimentarias)
+                muestras_sedimentarias = list(muestras_sedimentarias)
+                muestras_sedimentarias.remove(posicion_rover)
+                muestras_sedimentarias = tuple((muestras_sedimentarias))
+        
         elif(accion == "sobremarcha"):
-            nuevo_estado[1] -= 4
-            nuevo_estado[0] = parametro
-
-        return tuple(nuevo_estado)
+            bateria -= 4
+            posicion_rover = parametro
+        
+        return (posicion_rover, bateria, muestras_igneas, muestras_sedimentarias, taladro_equipado, muestras_almacenadas)
    
     def is_goal(self, state):
 
-        _, bateria, _, muestras_igneas, muestras_sedimentarias, _, muestras_almacenadas = state
+        _, bateria, muestras_igneas, muestras_sedimentarias, _, muestras_almacenadas = state
         cantidad_muestras_restantes = len(muestras_igneas) + len(muestras_sedimentarias)
 
         return cantidad_muestras_restantes == 0 and muestras_almacenadas == 0 #and bateria > 0
-    
+
     def heuristic(self, state):
+        posicion, bateria, igneas, sedimentarias, taladro, almacenadas = state
+        x, y = posicion
 
-        valor = 0
-        posicion_rover, bateria, zonas_sombra, muestras_igneas, muestras_sedimentarias, taladro_equipado, muestras_almacenadas = state
+        muestras = igneas + sedimentarias
+        restantes = len(muestras)
 
-        #(posicion_rover - pos_piedra_mas_lejana)
-        muestras_restantes = muestras_igneas + muestras_sedimentarias
-        if muestras_restantes:
-            diferencia_muestras = []
-            for muestra in muestras_restantes:
-                distancia = abs(posicion_rover[0] - muestra[0]) + abs(posicion_rover[1] - muestra[1])
-                diferencia_muestras.append(distancia)
-            valor += min(diferencia_muestras)
-        
-        cantidad_muestras_restantes = len(muestras_igneas) + len(muestras_sedimentarias)
-        valor += cantidad_muestras_restantes
+        if restantes == 0:
+            return 0
 
-        return valor
+        # distancia a la muestra más cercana
+        dist_min = min(abs(x-mx) + abs(y-my) for mx, my in muestras)
 
+        # costo mínimo de movimiento usando sobremarcha
+        movimiento_min = (dist_min + 1) // 2
+
+        # si hay solo una muestra
+        if restantes == 1:
+            return movimiento_min + 3  # recolectar + depositar mínimo
+
+        # si hay varias muestras
+        xd = [m[0] for m in muestras]
+        yd = [m[1] for m in muestras]
+
+        dispersion_muestras = (max(xd) - min(xd)) + (max(yd) - min(yd))
+
+        costo_recolectar = 2 * restantes
+        costo_depositar = restantes
+
+        return movimiento_min + dispersion_muestras + costo_recolectar + costo_depositar
+    
 def planear_rover(
     rover_inicio,
     bateria_inicial,
@@ -159,31 +167,29 @@ def planear_rover(
     estado_inicial = (
         rover_inicio,
         bateria_inicial,
-        tuple(zonas_sombra),
         tuple(muestras_igneas),
         tuple(muestras_sedimentarias),
-        None, #Taladro
+        "ninguno", #Taladro
         0, #Muestras almacenadas
     )
 
-    problema = RoverProblem(estado_inicial)
+    problema = RoverProblem(estado_inicial, tuple(zonas_sombra))
     #viewer = WebViewer() # BaseViewer() para consola. IMPORTANTE: DESACTIVAR AL ENTREGAR
     resultado = astar(problema, graph_search=True) #, viewer=viewer)
-    acciones = acciones = [accion for accion, estado in resultado.path() if accion is not None] #(problema.actions(estado_inicial))
+    acciones = [accion for accion, estado in resultado.path() if accion is not None] #(problema.actions(estado_inicial))
     
     return acciones
-
 
 if __name__ == "__main__":
     # Formato coordenadas: (fila, columna)
     acciones = planear_rover(
-        rover_inicio=(0, 0),
-        bateria_inicial=20,
-        zonas_sombra=[(0, 1), (0, 2)],
-        #muestras_igneas=None,
-        #muestras_sedimentarias=None,
-        muestras_igneas=[(1, 1), (1, 2)],
-        muestras_sedimentarias=[(2, 3)],
+        # rover_inicio=(0, 0),
+        # bateria_inicial=20,
+        # zonas_sombra=[(0, 1), (0, 2)],
+        # #muestras_igneas=None,
+        # #muestras_sedimentarias=None,
+        # muestras_igneas=[(1, 1), (1, 2)],
+        # muestras_sedimentarias=[(2, 3)],
     )
 
     print(acciones)
