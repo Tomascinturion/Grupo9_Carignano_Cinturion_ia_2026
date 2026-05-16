@@ -4,6 +4,7 @@ from simpleai.search import (CspProblem, backtrack, min_conflicts,
                              MOST_CONSTRAINED_VARIABLE,
                              LEAST_CONSTRAINING_VALUE,
                              HIGHEST_DEGREE_VARIABLE)
+
 def build_camp(camp_size, habs, generators, labs, deposits, airlocks, craters):
     ...
     variables = (
@@ -12,12 +13,12 @@ def build_camp(camp_size, habs, generators, labs, deposits, airlocks, craters):
     for i in range(camp_size[0]):
         for j in range(camp_size[1]):
             if (i, j) not in craters:
-                variables += (i,j)
+                variables += ((i,j),)
     dominios = {
         #modulos por celda
     }
     for var in variables:
-        dominios[var] = ["hab", "generator", "lab", "deposit", "airlock", "empty"]
+        dominios[var] = ["hab", "gen", "lab", "dep", "air", "emp"]
 
     restricciones = []
     #seguir restricciones
