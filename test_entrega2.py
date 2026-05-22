@@ -40,15 +40,15 @@ def test_modulo_existe():
     )
     with duration_warning(1, duration_msg):
         try:
-            import entrega2
+            import entrega2_NO
         except ModuleNotFoundError:
             pytest.fail("No se encuentra el módulo entrega2.py")
 
 
 @pytest.fixture()
 def build_camp():
-    import entrega2
-    fn = getattr(entrega2, "build_camp", None)
+    import entrega2_NO
+    fn = getattr(entrega2_NO, "build_camp", None)
     return fn
 
 
