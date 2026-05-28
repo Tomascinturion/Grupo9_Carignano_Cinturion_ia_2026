@@ -97,19 +97,19 @@ def build_camp(camp_size, habs, generators, labs, deposits, airlocks, craters):
         pos_hab = values[0]
         pos_otros_modulos = values[1:]
 
-        vecinos = [
+        adyacencias = [
             (pos_hab[0] + 1, pos_hab[1]),
             (pos_hab[0] - 1, pos_hab[1]),
             (pos_hab[0], pos_hab[1] + 1),
             (pos_hab[0], pos_hab[1] - 1),
         ]
 
-        for vecino in vecinos:
+        for adyacente in adyacencias:
             # no puede ser cráter
-            if vecino not in dominios_validos:
+            if adyacente not in dominios_validos:
                 continue
             # si nadie ocupa la celda
-            if vecino not in pos_otros_modulos:
+            if adyacente not in pos_otros_modulos:
                 return True
 
         return False
